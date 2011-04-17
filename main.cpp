@@ -21,6 +21,7 @@ unsigned int nTransactionsUpdated = 0;
 map<COutPoint, CInPoint> mapNextTx;
 
 map<uint256, CBlockIndex*> mapBlockIndex;
+
 uint256 hashGenesisBlock("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f");
 CBigNum bnProofOfWorkLimit(~uint256(0) >> 32);
 CBlockIndex* pindexGenesisBlock = NULL;
@@ -1928,13 +1929,27 @@ bool LoadBlockIndex(bool fAllowNew)
 {
     if (fTestNet)
     {
-        hashGenesisBlock = uint256("0x00000007199508e34a9ff81e6ec0c477a4cccff2a4767a8eee39c11db367b008");
+        // start of one sacarlson mod to enable settings from config file
+        printf("testnet mode active \n");
+              
+        if (fTestNet_config && mapArgs.count("-genesisblock"))
+        {
+            hashGenesisBlock = uint256(mapArgs["-genesisblock"]);
+            printf("hashGenesisBlock custom configured by -genesisblock in bitcoin.conf \n");
+        }
+        else
+        {
+            hashGenesisBlock = uint256("0x00000007199508e34a9ff81e6ec0c477a4cccff2a4767a8eee39c11db367b008");
+            printf("testnet original hashGenesisBlock assigned for ver 2.20.0 \n");
+        }
         bnProofOfWorkLimit = CBigNum(~uint256(0) >> 28);
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0xbf;
         pchMessageStart[2] = 0xb5;
         pchMessageStart[3] = 0xda;
     }
+    printf("hashGenesisBlock is now ");
+    printf("%s\n", hashGenesisBlock.ToString().c_str());
 
     //
     // Load block index
@@ -1951,7 +1966,7 @@ bool LoadBlockIndex(bool fAllowNew)
     {
         if (!fAllowNew)
             return false;
-
+        printf("creating new genesis block I hope \n");
         // Genesis Block:
         // CBlock(hash=000000000019d6, ver=1, hashPrevBlock=00000000000000, hashMerkleRoot=4a5e1e, nTime=1231006505, nBits=1d00ffff, nNonce=2083236893, vtx=1)
         //   CTransaction(hash=4a5e1e, ver=1, vin.size=1, vout.size=1, nLockTime=0)
@@ -1961,6 +1976,11 @@ bool LoadBlockIndex(bool fAllowNew)
 
         // Genesis block
         const char* pszTimestamp = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
+        if (fTestNet_config && mapArgs.count("-pszTimestamp"))
+        {
+            pszTimestamp = mapArgs["-pszTimestamp"].c_str();
+        }
+       
         CTransaction txNew;
         txNew.vin.resize(1);
         txNew.vout.resize(1);
@@ -1972,8 +1992,9 @@ bool LoadBlockIndex(bool fAllowNew)
         block.hashPrevBlock = 0;
         block.hashMerkleRoot = block.BuildMerkleTree();
         block.nVersion = 1;
-        block.nTime    = 1231006505;
-        block.nBits    = 0x1d00ffff;
+       
+        block.nTime    = 1231006505;  
+        block.nBits    = 0x1d00ffff;      
         block.nNonce   = 2083236893;
 
         if (fTestNet)
@@ -1983,12 +2004,51 @@ bool LoadBlockIndex(bool fAllowNew)
             block.nNonce   = 384568319;
         }
 
+       if (fTestNet_config && mapArgs.count("-block_nTime"))
+       {
+            // block.nTime   = atoi(mapArgs["-block_nTime"]);
+            stringstream convert(mapArgs["-block_nTime"]);
+            if ( !(convert >> block.nTime)) 
+                block.nTime = 0;
+            printf("block.nTime custom configured by -block_nTime in bitcoin.conf \n");
+       }
+       else
+       {
+           block.nTime    = 1296688602;
+       }
+    
+       if (fTestNet_config && mapArgs.count("-block_nNonce"))
+       {    
+           stringstream convert(mapArgs["-block_nNonce"]);
+           if ( !(convert >> block.nNonce)) 
+               block.nNonce = 0;
+           printf("block.nNonce custom configured by -block_nNonce in bitcoin.conf \n");
+       }
+       else
+       {
+           block.nNonce   = 384568319;
+       }
+  
+       printf("block.nTime = %d \n", block.nTime);
+       printf("block.nNonce = %d \n", block.nNonce);
+       //sleep(10);
+
         //// debug print
         printf("%s\n", block.GetHash().ToString().c_str());
+        printf("hashGenesisBlock is now ");
         printf("%s\n", hashGenesisBlock.ToString().c_str());
         printf("%s\n", block.hashMerkleRoot.ToString().c_str());
-        assert(block.hashMerkleRoot == uint256("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
+        if (fTestNet_config && mapArgs.count("-block_hashMerkleRoot"))
+        {
+            assert(block.hashMerkleRoot == uint256(mapArgs["-block_hashMerkleRoot"].c_str()));
+            printf("block.hashMerkleRoot custom configured by -block_hashMerkleRoot in bitcoin.conf \n");
+        }
+        else
+        {
+            assert(block.hashMerkleRoot == uint256("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
+        }
         block.print();
+        printf("block.GetHash() = %s \n", block.GetHash().ToString().c_str());
         assert(block.GetHash() == hashGenesisBlock);
 
         // Start new block file
@@ -4090,3 +4150,4 @@ string SendMoneyToBitcoinAddress(string strAddress, int64 nValue, CWalletTx& wtx
 
     return SendMoney(scriptPubKey, nValue, wtxNew, fAskFee);
 }
+
