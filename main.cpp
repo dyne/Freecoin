@@ -418,7 +418,8 @@ void CWalletTx::GetAmounts(int64& nGenerated, list<pair<string, int64> >& listRe
 
     if (IsCoinBase())
     {
-        if (GetDepthInMainChain() >= COINBASE_MATURITY)
+        //if (GetDepthInMainChain() >= COINBASE_MATURITY)
+        if (GetDepthInMainChain() >= 1)
             nGenerated = GetCredit();
         return;
     }
@@ -854,7 +855,8 @@ int CMerkleTx::GetBlocksToMaturity() const
 {
     if (!IsCoinBase())
         return 0;
-    return max(0, (COINBASE_MATURITY+20) - GetDepthInMainChain());
+    //return max(0, (COINBASE_MATURITY+20) - GetDepthInMainChain());
+    return max(0, (2) - GetDepthInMainChain());
 }
 
 
@@ -1299,7 +1301,8 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, map<uint256, CTxIndex>& mapTestPoo
 
             // If prev is coinbase, check that it's matured
             if (txPrev.IsCoinBase())
-                for (CBlockIndex* pindex = pindexBlock; pindex && pindexBlock->nHeight - pindex->nHeight < COINBASE_MATURITY; pindex = pindex->pprev)
+                //for (CBlockIndex* pindex = pindexBlock; pindex && pindexBlock->nHeight - pindex->nHeight < COINBASE_MATURITY; pindex = pindex->pprev)
+                for (CBlockIndex* pindex = pindexBlock; pindex && pindexBlock->nHeight - pindex->nHeight < 1; pindex = pindex->pprev)
                     if (pindex->nBlockPos == txindex.pos.nBlockPos && pindex->nFile == txindex.pos.nFile)
                         return error("ConnectInputs() : tried to spend coinbase at depth %d", pindexBlock->nHeight - pindex->nHeight);
 
@@ -2029,8 +2032,8 @@ bool LoadBlockIndex(bool fAllowNew)
            block.nNonce   = 384568319;
        }
   
-       printf("block.nTime = %d \n", block.nTime);
-       printf("block.nNonce = %d \n", block.nNonce);
+       printf("block.nTime = %u \n", block.nTime);
+       printf("block.nNonce = %u \n", block.nNonce);
        //sleep(10);
 
         //// debug print
