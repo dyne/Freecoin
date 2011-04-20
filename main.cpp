@@ -31,6 +31,7 @@ CBigNum bnBestInvalidWork = 0;
 uint256 hashBestChain = 0;
 CBlockIndex* pindexBest = NULL;
 int64 nTimeBestReceived = 0;
+int ncoinbase_maturity = 100;
 
 map<uint256, CBlock*> mapOrphanBlocks;
 multimap<uint256, CBlock*> mapOrphanBlocksByPrev;
@@ -418,10 +419,22 @@ void CWalletTx::GetAmounts(int64& nGenerated, list<pair<string, int64> >& listRe
 
     if (IsCoinBase())
     {
-        //if (GetDepthInMainChain() >= COINBASE_MATURITY)
-        if (GetDepthInMainChain() >= 1)
-            nGenerated = GetCredit();
-        return;
+       if (fTestNet_config && mapArgs.count("-coinbase_maturity"))
+       { 
+           printf("COINBASE_MATURITY custom configured by -coinbase_maturity in bitcoin.conf \n");
+           if (GetDepthInMainChain() >= atoi(mapArgs["-coinbase_maturity"]))
+               ncoinbase_maturity = atoi(mapArgs["-coinbase_maturity"]);
+               printf("ncoinbase_maturity = %u \n",ncoinbase_maturity);
+               nGenerated = GetCredit();
+           return;            
+       }
+       else
+       {
+           // COINBASE_MATURITY last I saw was default at 100
+           if (GetDepthInMainChain() >= COINBASE_MATURITY)       
+               nGenerated = GetCredit();
+           return;           
+       }       
     }
 
     // Compute fee:
@@ -855,8 +868,9 @@ int CMerkleTx::GetBlocksToMaturity() const
 {
     if (!IsCoinBase())
         return 0;
-    //return max(0, (COINBASE_MATURITY+20) - GetDepthInMainChain());
-    return max(0, (2) - GetDepthInMainChain());
+    //return max(0, (ncoinbase_maturity + 1) - GetDepthInMainChain());
+    printf("cmerkletx ncoinbase_maturity = %u \n",ncoinbase_maturity);
+    return max(0, (ncoinbase_maturity + 1) - GetDepthInMainChain());
 }
 
 
@@ -1302,7 +1316,7 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, map<uint256, CTxIndex>& mapTestPoo
             // If prev is coinbase, check that it's matured
             if (txPrev.IsCoinBase())
                 //for (CBlockIndex* pindex = pindexBlock; pindex && pindexBlock->nHeight - pindex->nHeight < COINBASE_MATURITY; pindex = pindex->pprev)
-                for (CBlockIndex* pindex = pindexBlock; pindex && pindexBlock->nHeight - pindex->nHeight < 1; pindex = pindex->pprev)
+                for (CBlockIndex* pindex = pindexBlock; pindex && pindexBlock->nHeight - pindex->nHeight < ncoinbase_maturity; pindex = pindex->pprev)
                     if (pindex->nBlockPos == txindex.pos.nBlockPos && pindex->nFile == txindex.pos.nFile)
                         return error("ConnectInputs() : tried to spend coinbase at depth %d", pindexBlock->nHeight - pindex->nHeight);
 
