@@ -1983,7 +1983,7 @@ bool LoadBlockIndex(bool fAllowNew)
         {
             pszTimestamp = mapArgs["-pszTimestamp"].c_str();
         }
-       
+        printf(" pszTimestamp = %s \n", pszTimestamp);
         CTransaction txNew;
         txNew.vin.resize(1);
         txNew.vout.resize(1);
@@ -2019,7 +2019,20 @@ bool LoadBlockIndex(bool fAllowNew)
        {
            block.nTime    = 1296688602;
        }
-    
+
+       if (fTestNet_config && mapArgs.count("-block_nBits"))
+       {    
+           stringstream convert(mapArgs["-block_nBits"]);
+           if ( !(convert >> block.nBits)) 
+               block.nBits = 0;
+           printf("block.nBits custom configured by -block_nBits in bitcoin.conf \n");
+       }
+       else
+       {
+           //default to value of testnet
+           block.nBits   = 0x1d07fff8;
+       }    
+
        if (fTestNet_config && mapArgs.count("-block_nNonce"))
        {    
            stringstream convert(mapArgs["-block_nNonce"]);
@@ -2033,14 +2046,14 @@ bool LoadBlockIndex(bool fAllowNew)
        }
   
        printf("block.nTime = %u \n", block.nTime);
+       printf("block.nBits = %u \n", block.nBits);
        printf("block.nNonce = %u \n", block.nNonce);
        //sleep(10);
 
         //// debug print
-        printf("%s\n", block.GetHash().ToString().c_str());
-        printf("hashGenesisBlock is now ");
-        printf("%s\n", hashGenesisBlock.ToString().c_str());
-        printf("%s\n", block.hashMerkleRoot.ToString().c_str());
+        printf("block.GetHash = %s\n", block.GetHash().ToString().c_str());
+        printf("hashGenesisBlock = %s\n", hashGenesisBlock.ToString().c_str());
+        printf("block.hashMerkleRoot = %s\n", block.hashMerkleRoot.ToString().c_str());
         if (fTestNet_config && mapArgs.count("-block_hashMerkleRoot"))
         {
             assert(block.hashMerkleRoot == uint256(mapArgs["-block_hashMerkleRoot"].c_str()));
