@@ -1,0 +1,23 @@
+new procedure to create new genesisblock using sacarlson git build
+1. get epoc time in unix with date +%s
+2. use this number to edit block_nTime= value in bitcoin.config file
+3. find a headline article in the news or paper to create a new string value to put in pszTimestamp in bitcoin.config example
+pszTimestamp="The Times 04/Apr/2011 Tornadoes and vicious winds left 17 people dead across four states"
+4. set values of testnet_config=1, gennewblock=1,testnet=1, printtoconsole=1  in bitcoin.config 
+5. start bitcoind -noirc -testnet -datadir=/home/youruser/.bitcoin/proto
+   this will take some time maybe 1 hour or so for it to find a block, when it does find one you will see some data
+   with an error at the end.
+6. with the data seen at this point edit the values in bitcoin.config for 
+  block_hashMerkleRoot=
+  genesisblock=
+  block_nTime=
+  block_nNonce=
+as seen in the data before the error line at the end.
+
+7. now delete the testnet dir you plan to use for your new proto bitcoin and start bitcoind -noirc -testnet again
+   it should start to run normaly and when exit you should now have a walet file with your new proto coin
+8. you can now start to mine you new coin with the command bitcoind -noirc -testnet -gen -datadir=/home/youruser/.bitcoin/proto but to do this you will also 
+   need to have another system listening on your new coins network, make sure the port listen of each match
+   you should make the other system setup with the same bitcoin.config file with the same git build as the minner.
+   make sure at start of the other system that the /home/youruser/.bitcoin/testnet  is deleted before start.
+   optionaly you should change the -datadir= in your client so you don't damage other coins in your dir.

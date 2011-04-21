@@ -31,7 +31,7 @@ CBigNum bnBestInvalidWork = 0;
 uint256 hashBestChain = 0;
 CBlockIndex* pindexBest = NULL;
 int64 nTimeBestReceived = 0;
-int ncoinbase_maturity = 100;
+//int ncoinbase_maturity = 100;
 
 map<uint256, CBlock*> mapOrphanBlocks;
 multimap<uint256, CBlock*> mapOrphanBlocksByPrev;
@@ -70,7 +70,51 @@ int fMinimizeOnClose = true;
 
 
 
+int GetCoinbase_maturity()
+{
+    if (fTestNet_config && mapArgs.count("-coinbase_maturity"))
+       {
+           int ncoinbase_maturity = atoi(mapArgs["-coinbase_maturity"]);
+           printf("COINBASE_MATURITY = %u set in config bitcoin.config \n",ncoinbase_maturity);          
+           return atoi(mapArgs["-coinbase_maturity"]);                    
+       }
+       else
+       {
+           // COINBASE_MATURITY last I saw was default at 100           
+           return COINBASE_MATURITY;           
+       }  
+}
 
+int GetArgInt(int udefault, char* argument)
+{   
+    if (fTestNet_config && mapArgs.count(argument))
+    {            
+        //uvalue = atoi(mapArgs[argument]);
+        int uvalue;            
+        stringstream convert(mapArgs[argument]);
+        if ( !(convert >> uvalue)) 
+            uvalue = 0;
+        printf("argument %s  found in bitcoin.conf with uint %u being used  \n",argument,uvalue);
+        return uvalue;
+    }
+    return udefault;
+}
+
+/*
+char* GetArgString(char* strdefault, char* argument)
+{
+    if (fTestNet_config && mapArgs.count(argument))
+    {  
+        char * strFound;
+        //strcpy(strFound, mapArgs[argument]); 
+        strFound = mapArgs[argument].c_str;  
+        printf("argument %s found in bitcoin.conf with string %s being used \n",argument,strFound);
+        //return mapArgs[argument];
+        return strFound;
+    }
+    return strdefault;
+}
+*/
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -418,23 +462,11 @@ void CWalletTx::GetAmounts(int64& nGenerated, list<pair<string, int64> >& listRe
     strSentAccount = strFromAccount;
 
     if (IsCoinBase())
-    {
-       if (fTestNet_config && mapArgs.count("-coinbase_maturity"))
-       { 
-           printf("COINBASE_MATURITY custom configured by -coinbase_maturity in bitcoin.conf \n");
-           if (GetDepthInMainChain() >= atoi(mapArgs["-coinbase_maturity"]))
-               ncoinbase_maturity = atoi(mapArgs["-coinbase_maturity"]);
-               printf("ncoinbase_maturity = %u \n",ncoinbase_maturity);
-               nGenerated = GetCredit();
-           return;            
-       }
-       else
-       {
+    {       
            // COINBASE_MATURITY last I saw was default at 100
-           if (GetDepthInMainChain() >= COINBASE_MATURITY)       
+           if (GetDepthInMainChain() >= GetCoinbase_maturity())       
                nGenerated = GetCredit();
-           return;           
-       }       
+           return;                 
     }
 
     // Compute fee:
@@ -867,10 +899,8 @@ int CMerkleTx::GetDepthInMainChain(int& nHeightRet) const
 int CMerkleTx::GetBlocksToMaturity() const
 {
     if (!IsCoinBase())
-        return 0;
-    //return max(0, (ncoinbase_maturity + 1) - GetDepthInMainChain());
-    printf("cmerkletx ncoinbase_maturity = %u \n",ncoinbase_maturity);
-    return max(0, (ncoinbase_maturity + 1) - GetDepthInMainChain());
+        return 0;  
+    return max(0, (GetCoinbase_maturity() + 1) - GetDepthInMainChain());
 }
 
 
@@ -1316,7 +1346,7 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, map<uint256, CTxIndex>& mapTestPoo
             // If prev is coinbase, check that it's matured
             if (txPrev.IsCoinBase())
                 //for (CBlockIndex* pindex = pindexBlock; pindex && pindexBlock->nHeight - pindex->nHeight < COINBASE_MATURITY; pindex = pindex->pprev)
-                for (CBlockIndex* pindex = pindexBlock; pindex && pindexBlock->nHeight - pindex->nHeight < ncoinbase_maturity; pindex = pindex->pprev)
+                for (CBlockIndex* pindex = pindexBlock; pindex && pindexBlock->nHeight - pindex->nHeight < GetCoinbase_maturity(); pindex = pindex->pprev)
                     if (pindex->nBlockPos == txindex.pos.nBlockPos && pindex->nFile == txindex.pos.nFile)
                         return error("ConnectInputs() : tried to spend coinbase at depth %d", pindexBlock->nHeight - pindex->nHeight);
 
@@ -2029,11 +2059,7 @@ bool LoadBlockIndex(bool fAllowNew)
                 block.nTime = 0;
             printf("block.nTime custom configured by -block_nTime in bitcoin.conf \n");
        }
-       else
-       {
-           block.nTime    = 1296688602;
-       }
-
+             
        if (fTestNet_config && mapArgs.count("-block_nBits"))
        {    
            stringstream convert(mapArgs["-block_nBits"]);
@@ -2041,12 +2067,7 @@ bool LoadBlockIndex(bool fAllowNew)
                block.nBits = 0;
            printf("block.nBits custom configured by -block_nBits in bitcoin.conf \n");
        }
-       else
-       {
-           //default to value of testnet
-           block.nBits   = 0x1d07fff8;
-       }    
-
+         
        if (fTestNet_config && mapArgs.count("-block_nNonce"))
        {    
            stringstream convert(mapArgs["-block_nNonce"]);
@@ -2054,17 +2075,31 @@ bool LoadBlockIndex(bool fAllowNew)
                block.nNonce = 0;
            printf("block.nNonce custom configured by -block_nNonce in bitcoin.conf \n");
        }
-       else
-       {
-           block.nNonce   = 384568319;
-       }
-  
+         
        printf("block.nTime = %u \n", block.nTime);
        printf("block.nBits = %u \n", block.nBits);
        printf("block.nNonce = %u \n", block.nNonce);
-       //sleep(10);
+
+       if (fTestNet_config && mapArgs.count("-gennewblock"))
+       {       
+           // This will figure out a valid hash and Nonce if you're
+           // creating a different genesis block:
+           uint256 hashTarget = CBigNum().SetCompact(block.nBits).getuint256();
+           while (block.GetHash() > hashTarget)
+           {
+               ++block.nNonce;
+               if (block.nNonce == 0)
+               {
+                   printf("NONCE WRAPPED, incrementing time");
+                   ++block.nTime;
+               }
+           }
+   
+        }
 
         //// debug print
+        printf("block.nTime = %u \n", block.nTime);
+        printf("block.nNonce = %u \n", block.nNonce);
         printf("block.GetHash = %s\n", block.GetHash().ToString().c_str());
         printf("hashGenesisBlock = %s\n", hashGenesisBlock.ToString().c_str());
         printf("block.hashMerkleRoot = %s\n", block.hashMerkleRoot.ToString().c_str());
@@ -4180,4 +4215,6 @@ string SendMoneyToBitcoinAddress(string strAddress, int64 nValue, CWalletTx& wtx
 
     return SendMoney(scriptPubKey, nValue, wtxNew, fAskFee);
 }
+
+
 
