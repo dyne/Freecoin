@@ -35,6 +35,8 @@ bool BindListenPort(string& strError=REF(string()));
 void StartNode(void* parg);
 bool StopNode();
 
+void SetListenPort(unsigned short nPort);
+unsigned short GetListenPort();
 
 
 

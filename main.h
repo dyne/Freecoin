@@ -103,8 +103,6 @@ string GetWarnings(string strFor);
 
 
 
-
-
 class CDiskTxPos
 {
 public:
@@ -616,16 +614,15 @@ public:
         if (nBlockSize != 1 && nNewBlockSize >= MAX_BLOCK_SIZE_GEN/2)
         {
             if (nNewBlockSize >= MAX_BLOCK_SIZE_GEN)
-                return MAX_MONEY;
+                return MAX_MONEY;               
             nMinFee *= MAX_BLOCK_SIZE_GEN / (MAX_BLOCK_SIZE_GEN - nNewBlockSize);
         }
 
         if (!MoneyRange(nMinFee))
-            nMinFee = MAX_MONEY;
+            nMinFee = MAX_MONEY;          
         return nMinFee;
     }
-
-
+   
     bool ReadFromDisk(CDiskTxPos pos, FILE** pfileRet=NULL)
     {
         CAutoFile filein = OpenBlockFile(pos.nFile, 0, pfileRet ? "rb+" : "rb");

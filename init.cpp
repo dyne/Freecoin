@@ -223,6 +223,9 @@ bool AppInit2(int argc, char* argv[])
     fTestNet_config = GetBoolArg("-testnet_config");
     fNoListen = GetBoolArg("-nolisten");
     fLogTimestamps = GetBoolArg("-logtimestamps");
+
+    if (mapArgs.count("-port"))
+        SetListenPort(atoi(mapArgs["-port"]));
     
     for (int i = 1; i < argc; i++)
         if (!IsSwitchChar(argv[i][0]))

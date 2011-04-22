@@ -101,7 +101,24 @@ int GetArgInt(int udefault, char* argument)
 }
 
 /*
-char* GetArgString(char* strdefault, char* argument)
+int64 GetArgmInt64(int64 udefault,const char* argument)
+{   
+    if (fTestNet_config && mapArgs.count(argument))
+    {            
+        //uvalue = atoi(mapArgs[argument]);
+        int64 uvalue;            
+        stringstream convert(mapArgs[argument]);
+        if ( !(convert >> uvalue)) 
+            uvalue = 0;
+        printf("argument %s  found in bitcoin.conf with uint %u being used  \n",argument,uvalue);
+        return uvalue;
+    }
+    return udefault;
+}
+*/
+
+/*
+char* GetArgString(const char* strdefault,const char* argument)
 {
     if (fTestNet_config && mapArgs.count(argument))
     {  
