@@ -7,10 +7,10 @@
 
 #include "uibase.h"
 
-#include "xpm/about.xpm"
-#include "xpm/addressbook20.xpm"
-#include "xpm/check.xpm"
-#include "xpm/send20.xpm"
+#include "../xpm/about.xpm"
+#include "../xpm/addressbook20.xpm"
+#include "../xpm/check.xpm"
+#include "../xpm/send20.xpm"
 
 ///////////////////////////////////////////////////////////////////////////
 

@@ -2,6 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
+#include "../auto-config.h"
+
 #ifdef _MSC_VER
 #pragma warning(disable:4786)
 #pragma warning(disable:4804)
@@ -124,8 +126,8 @@
 #include "main.h"
 #include "rpc.h"
 #ifdef GUI
-#include "uibase.h"
-#include "ui.h"
+#include "wx/uibase.h"
+#include "wx/ui.h"
 #else
 #include "noui.h"
 #endif

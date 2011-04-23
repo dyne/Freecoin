@@ -251,7 +251,7 @@
                 <event name="OnSize"></event>
                 <event name="OnUpdateUI"></event>
                 <object class="tool" expanded="1">
-                    <property name="bitmap">xpm/send20.xpm; Load From File</property>
+                    <property name="bitmap">../xpm/send20.xpm; Load From File</property>
                     <property name="id">wxID_BUTTONSEND</property>
                     <property name="kind">wxITEM_NORMAL</property>
                     <property name="label">Send Coins</property>
@@ -265,7 +265,7 @@
                     <event name="OnUpdateUI"></event>
                 </object>
                 <object class="tool" expanded="1">
-                    <property name="bitmap">xpm/addressbook20.xpm; Load From File</property>
+                    <property name="bitmap">../xpm/addressbook20.xpm; Load From File</property>
                     <property name="id">wxID_BUTTONRECEIVE</property>
                     <property name="kind">wxITEM_NORMAL</property>
                     <property name="label">Address Book</property>
@@ -2978,7 +2978,7 @@
                     <property name="proportion">0</property>
                     <object class="wxStaticBitmap" expanded="1">
                         <property name="bg"></property>
-                        <property name="bitmap">xpm/about.xpm; Load From File</property>
+                        <property name="bitmap">../xpm/about.xpm; Load From File</property>
                         <property name="context_help"></property>
                         <property name="enabled">1</property>
                         <property name="fg"></property>
@@ -3520,7 +3520,7 @@
                                     <property name="proportion">0</property>
                                     <object class="wxStaticBitmap" expanded="1">
                                         <property name="bg"></property>
-                                        <property name="bitmap">xpm/check.xpm; Load From File</property>
+                                        <property name="bitmap">../xpm/check.xpm; Load From File</property>
                                         <property name="context_help"></property>
                                         <property name="enabled">1</property>
                                         <property name="fg"></property>
