@@ -69,13 +69,30 @@ int fMinimizeToTray = true;
 int fMinimizeOnClose = true;
 
 
+static int64 nMaxMoney = 0;
+ 
+void SetMaxMoney(int64 nValue) 
+{
+    if (nMaxMoney != 0)
+        throw(runtime_error("Error, must call SetMaxMoney exactly once."));
+    nMaxMoney = nValue;
+}
+ 
+int64 GetMaxMoney() 
+{
+    if (nMaxMoney == 0)
+        return MAX_MONEY;
+    return nMaxMoney * COIN;
+}
+
+
 
 int GetCoinbase_maturity()
 {
     if (fTestNet_config && mapArgs.count("-coinbase_maturity"))
        {
            int ncoinbase_maturity = atoi(mapArgs["-coinbase_maturity"]);
-           printf("COINBASE_MATURITY = %u set in config bitcoin.config \n",ncoinbase_maturity);          
+           //printf("COINBASE_MATURITY = %u set in config bitcoin.config \n",ncoinbase_maturity);          
            return atoi(mapArgs["-coinbase_maturity"]);                    
        }
        else
@@ -84,8 +101,8 @@ int GetCoinbase_maturity()
            return COINBASE_MATURITY;           
        }  
 }
-
-int GetArgInt(int udefault, char* argument)
+// GetArgInt(50,"-Subsidy");
+int GetArgIntxx(int udefault, char* argument)
 {   
     if (fTestNet_config && mapArgs.count(argument))
     {            
@@ -1166,10 +1183,15 @@ uint256 GetOrphanRoot(const CBlock* pblock)
 
 int64 GetBlockValue(int nHeight, int64 nFees)
 {
-    int64 nSubsidy = 50 * COIN;
+    //int64 nSubsidy = 50 * COIN;
+    int64 nSubsidy = (GetArgIntxx(50,"-Subsidy") * COIN);
+    printf("nSubsidy before shift =   %lu  GetArgInt-Subsidy = %u \n",nSubsidy,GetArgIntxx(50,"-Subsidy"));
 
     // Subsidy is cut in half every 4 years
-    nSubsidy >>= (nHeight / 210000);
+    //nSubsidy >>= (nHeight / 210000);
+    nSubsidy >>= (nHeight / (GetMaxMoney()/COIN/100));
+    printf("nHeight = %u  nSbsidy = %lu nFees = %ld \n",nHeight,nSubsidy,nFees);
+    printf("GetMaxMoney()/COIN/10 = %u \n",(GetMaxMoney()/COIN));
 
     return nSubsidy + nFees;
 }
