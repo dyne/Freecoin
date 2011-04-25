@@ -102,7 +102,7 @@ int GetCoinbase_maturity()
        }  
 }
 // GetArgInt(50,"-Subsidy");
-int GetArgIntxx(int udefault, char* argument)
+int GetArgIntxx(int udefault, const char* argument)
 {   
     if (fTestNet_config && mapArgs.count(argument))
     {            
@@ -767,8 +767,12 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
         return error("AcceptToMemoryPool() : nonstandard transaction");
 
     // Rather not work on nonstandard transactions
+    // to enable running scripts add -nonstandard in bitcoin.conf by sacarlson
     if (!IsStandard())
-        return error("AcceptToMemoryPool() : nonstandard transaction type");
+    {
+        if (!mapArgs.count("-nonstandard"))
+            return error("AcceptToMemoryPool() : nonstandard transaction type");
+    }
 
     // Do we already have it?
     uint256 hash = GetHash();
@@ -1185,8 +1189,12 @@ int64 GetBlockValue(int nHeight, int64 nFees)
 {
     //int64 nSubsidy = 50 * COIN;
     int64 nSubsidy = (GetArgIntxx(50,"-Subsidy") * COIN);
-    printf("nSubsidy before shift =   %lu  GetArgInt-Subsidy = %u \n",nSubsidy,GetArgIntxx(50,"-Subsidy"));
-
+    if (mapArgs.count("-custom_inflation"))
+    {
+        if (nHeight>GetArgIntxx(100,"-inflation_triger"))
+            nSubsidy = GetArgIntxx(.01,"-post_Subsidy") * COIN;
+        printf("nSubsidy before shift =   %lu  GetArgInt-Subsidy = %u or %lu\n",nSubsidy,GetArgIntxx(50,"-Subsidy"),GetArgIntxx(50,"-Subsidy"));
+    }
     // Subsidy is cut in half every 4 years
     //nSubsidy >>= (nHeight / 210000);
     nSubsidy >>= (nHeight / (GetMaxMoney()/COIN/100));
@@ -1830,6 +1838,12 @@ bool CBlock::AcceptBlock()
             (nHeight == 105000 && hash != uint256("0x00000000000291ce28027faea320c8d2b054b2e0fe44a773f3eefb151d6bdc97")))
             return error("AcceptBlock() : rejected by checkpoint lockin at %d", nHeight);
 
+    printf("-check_block = %d \n",GetArgIntxx(0,"-check_block"));
+    if (GetArgIntxx(0,"-check_block")>0)
+    {
+        if (nHeight == GetArgIntxx(0,"-check_block") && hash != uint256(mapArgs["-check_hash"]))
+            return error("AcceptBlock() : rejected by checkpoint lockin at %d", nHeight);
+    }
     // Write block to history file
     if (!CheckDiskSpace(::GetSerializeSize(*this, SER_DISK)))
         return error("AcceptBlock() : out of disk space");

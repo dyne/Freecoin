@@ -46,6 +46,9 @@ with the info above we would edit the values in bitcoin.config file with:
 
 7. now delete the testnet dir you plan to use for your new proto bitcoin and start bitcoind -noirc -testnet again
    it should start to run normaly and when exit you should now have a walet file with your new proto coin genessis block
+   be sure to set gennewblock=0 or comment out before you continue at this point
+   in fact at this point you might want to start using a different -datadir also create your -datadir and copy your
+   config file into it then run bitcoind -noirc -testnet -datadir=/home/youruser/.bitcoin/proto
 
 8. you can now start to mine you new coin with the command bitcoind -noirc -testnet -gen -datadir=/home/youruser/.bitcoin/proto but to do this you will also 
    need to have another system listening on your new coins network, make sure the port listen of each match
