@@ -5,6 +5,7 @@
 #include "headers.h"
 
 static const int MAX_OUTBOUND_CONNECTIONS = 8;
+unsigned short nListenPort = 0;
 
 void ThreadMessageHandler2(void* parg);
 void ThreadSocketHandler2(void* parg);
@@ -1243,10 +1244,11 @@ void ThreadMessageHandler2(void* parg)
 }
 
 
-static unsigned short nListenPort = 0;
+//unsigned short nListenPort = 0;
  
 void SetListenPort(unsigned short port) // port in host byte order
 {
+    printf("nListenPort = %u \n",nListenPort);
     if (nListenPort != 0)
         throw(runtime_error("Error, must call SetListenPort exactly once."));
     nListenPort = htons(port);
@@ -1257,12 +1259,9 @@ unsigned short GetListenPort() // returns port in network byte order
 {
     if (nListenPort == 0)
         nListenPort = GetDefaultPort();
+    //printf("GetListenPort now returns %d \n",nListenPort);
     return nListenPort;
 }
-
-
-
-
 
 
 bool BindListenPort(string& strError)
