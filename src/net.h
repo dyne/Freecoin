@@ -9,6 +9,7 @@ class CRequestTracker;
 class CNode;
 class CBlockIndex;
 extern int nBestHeight;
+extern unsigned short nListenPort;
 
 
 
@@ -36,6 +37,8 @@ bool BindListenPort(string& strError=REF(string()));
 void StartNode(void* parg);
 bool StopNode();
 
+void SetListenPort(unsigned short nPort);
+unsigned short GetListenPort();
 
 
 
@@ -156,7 +159,8 @@ public:
     {
         Init();
         ip = ipIn;
-        port = (portIn == 0 ? GetDefaultPort() : portIn);
+        //port = (portIn == 0 ? GetDefaultPort() : portIn);
+        port = (portIn == 0 ? GetListenPort() : portIn);
         nServices = nServicesIn;
     }
 
@@ -187,7 +191,7 @@ public:
         nServices = NODE_NETWORK;
         memcpy(pchReserved, pchIPv4, sizeof(pchReserved));
         ip = INADDR_NONE;
-        port = GetDefaultPort();
+        port = GetListenPort();
         nTime = 100000000;
         nLastTry = 0;
     }
@@ -195,7 +199,7 @@ public:
     bool SetAddress(const char* pszIn)
     {
         ip = INADDR_NONE;
-        port = GetDefaultPort();
+        port = GetListenPort();
         char psz[100];
         strlcpy(psz, pszIn, sizeof(psz));
         unsigned int a=0, b=0, c=0, d=0, e=0;

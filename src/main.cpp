@@ -21,6 +21,7 @@ unsigned int nTransactionsUpdated = 0;
 map<COutPoint, CInPoint> mapNextTx;
 
 map<uint256, CBlockIndex*> mapBlockIndex;
+
 uint256 hashGenesisBlock("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f");
 CBigNum bnProofOfWorkLimit(~uint256(0) >> 32);
 CBlockIndex* pindexGenesisBlock = NULL;
@@ -30,6 +31,7 @@ CBigNum bnBestInvalidWork = 0;
 uint256 hashBestChain = 0;
 CBlockIndex* pindexBest = NULL;
 int64 nTimeBestReceived = 0;
+//int ncoinbase_maturity = 100;
 
 map<uint256, CBlock*> mapOrphanBlocks;
 multimap<uint256, CBlock*> mapOrphanBlocksByPrev;
@@ -75,8 +77,86 @@ int fUseUPnP = false;
 
 
 
+static int64 nMaxMoney = 0;
+ 
+void SetMaxMoney(int64 nValue) 
+{
+    if (nMaxMoney != 0)
+        throw(runtime_error("Error, must call SetMaxMoney exactly once."));
+    nMaxMoney = nValue;
+}
+ 
+int64 GetMaxMoney() 
+{
+    if (nMaxMoney == 0)
+        return MAX_MONEY;
+    return nMaxMoney * COIN;
+}
 
 
+
+int GetCoinbase_maturity()
+{
+    if (fTestNet_config && mapArgs.count("-coinbase_maturity"))
+       {
+           int ncoinbase_maturity = atoi(mapArgs["-coinbase_maturity"]);
+           //printf("COINBASE_MATURITY = %u set in config bitcoin.config \n",ncoinbase_maturity);          
+           return atoi(mapArgs["-coinbase_maturity"]);                    
+       }
+       else
+       {
+           // COINBASE_MATURITY last I saw was default at 100           
+           return COINBASE_MATURITY;           
+       }  
+}
+// GetArgInt(50,"-Subsidy");
+int GetArgIntxx(int udefault, const char* argument)
+{   
+    if (fTestNet_config && mapArgs.count(argument))
+    {            
+        //uvalue = atoi(mapArgs[argument]);
+        int uvalue;            
+        stringstream convert(mapArgs[argument]);
+        if ( !(convert >> uvalue)) 
+            uvalue = 0;
+        printf("argument %s  found in bitcoin.conf with uint %u being used  \n",argument,uvalue);
+        return uvalue;
+    }
+    return udefault;
+}
+
+/*
+int64 GetArgmInt64(int64 udefault,const char* argument)
+{   
+    if (fTestNet_config && mapArgs.count(argument))
+    {            
+        //uvalue = atoi(mapArgs[argument]);
+        int64 uvalue;            
+        stringstream convert(mapArgs[argument]);
+        if ( !(convert >> uvalue)) 
+            uvalue = 0;
+        printf("argument %s  found in bitcoin.conf with uint %u being used  \n",argument,uvalue);
+        return uvalue;
+    }
+    return udefault;
+}
+*/
+
+/*
+char* GetArgString(const char* strdefault,const char* argument)
+{
+    if (fTestNet_config && mapArgs.count(argument))
+    {  
+        char * strFound;
+        //strcpy(strFound, mapArgs[argument]); 
+        strFound = mapArgs[argument].c_str;  
+        printf("argument %s found in bitcoin.conf with string %s being used \n",argument,strFound);
+        //return mapArgs[argument];
+        return strFound;
+    }
+    return strdefault;
+}
+*/
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -410,12 +490,14 @@ void CWalletTx::GetAmounts(int64& nGeneratedImmature, int64& nGeneratedMature, l
     strSentAccount = strFromAccount;
 
     if (IsCoinBase())
+
     {
         if (GetBlocksToMaturity() > 0)
             nGeneratedImmature = CTransaction::GetCredit();
         else
             nGeneratedMature = GetCredit();
         return;
+
     }
 
     // Compute fee:
@@ -681,9 +763,15 @@ bool CTransaction::AcceptToMemoryPool(CTxDB& txdb, bool fCheckInputs, bool* pfMi
     if (GetSigOpCount() > nSize / 34 || nSize < 100)
         return error("AcceptToMemoryPool() : nonstandard transaction");
 
-    // Rather not work on nonstandard transactions (unless -testnet)
+
+    // Rather not work on nonstandard transactions
+    // to enable running scripts add -nonstandard in bitcoin.conf by sacarlson
     if (!fTestNet && !IsStandard())
-        return error("AcceptToMemoryPool() : nonstandard transaction type");
+    {
+        if (!mapArgs.count("-nonstandard"))
+            return error("AcceptToMemoryPool() : nonstandard transaction type");
+    }
+
 
     // Do we already have it?
     uint256 hash = GetHash();
@@ -848,8 +936,8 @@ int CMerkleTx::GetDepthInMainChain(int& nHeightRet) const
 int CMerkleTx::GetBlocksToMaturity() const
 {
     if (!IsCoinBase())
-        return 0;
-    return max(0, (COINBASE_MATURITY+20) - GetDepthInMainChain());
+        return 0;  
+    return max(0, (GetCoinbase_maturity() + 1) - GetDepthInMainChain());
 }
 
 
@@ -1086,10 +1174,19 @@ uint256 GetOrphanRoot(const CBlock* pblock)
 
 int64 GetBlockValue(int nHeight, int64 nFees)
 {
-    int64 nSubsidy = 50 * COIN;
-
+    //int64 nSubsidy = 50 * COIN;
+    int64 nSubsidy = (GetArgIntxx(50,"-Subsidy") * COIN);
+    if (mapArgs.count("-custom_inflation"))
+    {
+        if (nHeight>GetArgIntxx(100,"-inflation_triger"))
+            nSubsidy = GetArgIntxx(.01,"-post_Subsidy") * COIN;
+        printf("nSubsidy before shift =   %lu  GetArgInt-Subsidy = %u or %lu\n",nSubsidy,GetArgIntxx(50,"-Subsidy"),GetArgIntxx(50,"-Subsidy"));
+    }
     // Subsidy is cut in half every 4 years
-    nSubsidy >>= (nHeight / 210000);
+    //nSubsidy >>= (nHeight / 210000);
+    nSubsidy >>= (nHeight / (GetMaxMoney()/COIN/100));
+    printf("nHeight = %u  nSbsidy = %lu nFees = %ld \n",nHeight,nSubsidy,nFees);
+    printf("GetMaxMoney()/COIN/10 = %u \n",(GetMaxMoney()/COIN));
 
     return nSubsidy + nFees;
 }
@@ -1282,7 +1379,8 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, map<uint256, CTxIndex>& mapTestPoo
 
             // If prev is coinbase, check that it's matured
             if (txPrev.IsCoinBase())
-                for (CBlockIndex* pindex = pindexBlock; pindex && pindexBlock->nHeight - pindex->nHeight < COINBASE_MATURITY; pindex = pindex->pprev)
+                //for (CBlockIndex* pindex = pindexBlock; pindex && pindexBlock->nHeight - pindex->nHeight < COINBASE_MATURITY; pindex = pindex->pprev)
+                for (CBlockIndex* pindex = pindexBlock; pindex && pindexBlock->nHeight - pindex->nHeight < GetCoinbase_maturity(); pindex = pindex->pprev)
                     if (pindex->nBlockPos == txindex.pos.nBlockPos && pindex->nFile == txindex.pos.nFile)
                         return error("ConnectInputs() : tried to spend coinbase at depth %d", pindexBlock->nHeight - pindex->nHeight);
 
@@ -1737,6 +1835,12 @@ bool CBlock::AcceptBlock()
             (nHeight == 118000 && hash != uint256("0x000000000000774a7f8a7a12dc906ddb9e17e75d684f15e00f8767f9e8f36553")))
             return error("AcceptBlock() : rejected by checkpoint lockin at %d", nHeight);
 
+    printf("-check_block = %d \n",GetArgIntxx(0,"-check_block"));
+    if (GetArgIntxx(0,"-check_block")>0)
+    {
+        if (nHeight == GetArgIntxx(0,"-check_block") && hash != uint256(mapArgs["-check_hash"]))
+            return error("AcceptBlock() : rejected by checkpoint lockin at %d", nHeight);
+    }
     // Write block to history file
     if (!CheckDiskSpace(::GetSerializeSize(*this, SER_DISK)))
         return error("AcceptBlock() : out of disk space");
@@ -1922,13 +2026,27 @@ bool LoadBlockIndex(bool fAllowNew)
 {
     if (fTestNet)
     {
-        hashGenesisBlock = uint256("0x00000007199508e34a9ff81e6ec0c477a4cccff2a4767a8eee39c11db367b008");
+        // start of one sacarlson mod to enable settings from config file
+        printf("testnet mode active \n");
+              
+        if (fTestNet_config && mapArgs.count("-genesisblock"))
+        {
+            hashGenesisBlock = uint256(mapArgs["-genesisblock"]);
+            printf("hashGenesisBlock custom configured by -genesisblock in bitcoin.conf \n");
+        }
+        else
+        {
+            hashGenesisBlock = uint256("0x00000007199508e34a9ff81e6ec0c477a4cccff2a4767a8eee39c11db367b008");
+            printf("testnet original hashGenesisBlock assigned for ver 2.20.0 \n");
+        }
         bnProofOfWorkLimit = CBigNum(~uint256(0) >> 28);
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0xbf;
         pchMessageStart[2] = 0xb5;
         pchMessageStart[3] = 0xda;
     }
+    printf("hashGenesisBlock is now ");
+    printf("%s\n", hashGenesisBlock.ToString().c_str());
 
     //
     // Load block index
@@ -1945,7 +2063,7 @@ bool LoadBlockIndex(bool fAllowNew)
     {
         if (!fAllowNew)
             return false;
-
+        printf("creating new genesis block I hope \n");
         // Genesis Block:
         // CBlock(hash=000000000019d6, ver=1, hashPrevBlock=00000000000000, hashMerkleRoot=4a5e1e, nTime=1231006505, nBits=1d00ffff, nNonce=2083236893, vtx=1)
         //   CTransaction(hash=4a5e1e, ver=1, vin.size=1, vout.size=1, nLockTime=0)
@@ -1955,6 +2073,11 @@ bool LoadBlockIndex(bool fAllowNew)
 
         // Genesis block
         const char* pszTimestamp = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
+        if (fTestNet_config && mapArgs.count("-pszTimestamp"))
+        {
+            pszTimestamp = mapArgs["-pszTimestamp"].c_str();
+        }
+        printf(" pszTimestamp = %s \n", pszTimestamp);
         CTransaction txNew;
         txNew.vin.resize(1);
         txNew.vout.resize(1);
@@ -1966,8 +2089,9 @@ bool LoadBlockIndex(bool fAllowNew)
         block.hashPrevBlock = 0;
         block.hashMerkleRoot = block.BuildMerkleTree();
         block.nVersion = 1;
-        block.nTime    = 1231006505;
-        block.nBits    = 0x1d00ffff;
+       
+        block.nTime    = 1231006505;  
+        block.nBits    = 0x1d00ffff;      
         block.nNonce   = 2083236893;
 
         if (fTestNet)
@@ -1977,12 +2101,69 @@ bool LoadBlockIndex(bool fAllowNew)
             block.nNonce   = 384568319;
         }
 
+       if (fTestNet_config && mapArgs.count("-block_nTime"))
+       {
+            // block.nTime   = atoi(mapArgs["-block_nTime"]);
+            stringstream convert(mapArgs["-block_nTime"]);
+            if ( !(convert >> block.nTime)) 
+                block.nTime = 0;
+            printf("block.nTime custom configured by -block_nTime in bitcoin.conf \n");
+       }
+             
+       if (fTestNet_config && mapArgs.count("-block_nBits"))
+       {    
+           stringstream convert(mapArgs["-block_nBits"]);
+           if ( !(convert >> block.nBits)) 
+               block.nBits = 0;
+           printf("block.nBits custom configured by -block_nBits in bitcoin.conf \n");
+       }
+         
+       if (fTestNet_config && mapArgs.count("-block_nNonce"))
+       {    
+           stringstream convert(mapArgs["-block_nNonce"]);
+           if ( !(convert >> block.nNonce)) 
+               block.nNonce = 0;
+           printf("block.nNonce custom configured by -block_nNonce in bitcoin.conf \n");
+       }
+         
+       printf("block.nTime = %u \n", block.nTime);
+       printf("block.nBits = %u \n", block.nBits);
+       printf("block.nNonce = %u \n", block.nNonce);
+
+       if (fTestNet_config && mapArgs.count("-gennewblock"))
+       {       
+           // This will figure out a valid hash and Nonce if you're
+           // creating a different genesis block:
+           uint256 hashTarget = CBigNum().SetCompact(block.nBits).getuint256();
+           while (block.GetHash() > hashTarget)
+           {
+               ++block.nNonce;
+               if (block.nNonce == 0)
+               {
+                   printf("NONCE WRAPPED, incrementing time");
+                   ++block.nTime;
+               }
+           }
+   
+        }
+
         //// debug print
-        printf("%s\n", block.GetHash().ToString().c_str());
-        printf("%s\n", hashGenesisBlock.ToString().c_str());
-        printf("%s\n", block.hashMerkleRoot.ToString().c_str());
-        assert(block.hashMerkleRoot == uint256("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
+        printf("block.nTime = %u \n", block.nTime);
+        printf("block.nNonce = %u \n", block.nNonce);
+        printf("block.GetHash = %s\n", block.GetHash().ToString().c_str());
+        printf("hashGenesisBlock = %s\n", hashGenesisBlock.ToString().c_str());
+        printf("block.hashMerkleRoot = %s\n", block.hashMerkleRoot.ToString().c_str());
+        if (fTestNet_config && mapArgs.count("-block_hashMerkleRoot"))
+        {
+            assert(block.hashMerkleRoot == uint256(mapArgs["-block_hashMerkleRoot"].c_str()));
+            printf("block.hashMerkleRoot custom configured by -block_hashMerkleRoot in bitcoin.conf \n");
+        }
+        else
+        {
+            assert(block.hashMerkleRoot == uint256("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
+        }
         block.print();
+        printf("block.GetHash() = %s \n", block.GetHash().ToString().c_str());
         assert(block.GetHash() == hashGenesisBlock);
 
         // Start new block file
@@ -4026,3 +4207,6 @@ string SendMoneyToBitcoinAddress(string strAddress, int64 nValue, CWalletTx& wtx
 
     return SendMoney(scriptPubKey, nValue, wtxNew, fAskFee);
 }
+
+
+

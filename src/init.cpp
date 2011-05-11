@@ -229,9 +229,20 @@ bool AppInit2(int argc, char* argv[])
     fPrintToDebugger = GetBoolArg("-printtodebugger");
 
     fTestNet = GetBoolArg("-testnet");
+    fTestNet_config = GetBoolArg("-testnet_config");
     fNoListen = GetBoolArg("-nolisten");
     fLogTimestamps = GetBoolArg("-logtimestamps");
+    nListenPort = 0;
+    if (mapArgs.count("-port"))
+        SetListenPort(atoi(mapArgs["-port"]));
+    
+    printf("GetListenPort() value now set to %d or hex %04x \n",GetListenPort(),GetListenPort());
 
+    if (mapArgs.count("-max_money"))
+        SetMaxMoney(atoi(mapArgs["-max_money"]));
+
+    printf("MaxMoney now set to %lld  or hex %0I64x  \n",GetMaxMoney(),GetMaxMoney());
+    
     for (int i = 1; i < argc; i++)
         if (!IsSwitchChar(argv[i][0]))
             fCommandLine = true;

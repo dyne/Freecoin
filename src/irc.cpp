@@ -271,12 +271,27 @@ void ThreadIRCSeed2(void* parg)
 
     while (!fShutdown)
     {
-        //CAddress addrConnect("216.155.130.130:6667"); // chat.freenode.net
+        //CAddress addrConnect("216.155.130.130:6667"); // chat.freenode.net        
+        //CAddress addrConnect("92.243.23.21:6667"); // irc.lfnet.org
         CAddress addrConnect("92.243.23.21:6667"); // irc.lfnet.org
+        if (fTestNet_config && mapArgs.count("-irc_ip"))
+        {
+            // CAddress addrConnect(mapArgs["-genesisblock"]);
+            CAddress addrConnect(mapArgs["-irc_ip"].c_str());
+        }
+           
+
         if (!fTOR)
         {
-            //struct hostent* phostent = gethostbyname("chat.freenode.net");
+            //struct hostent* phostent = gethostbyname("chat.freenode.net");           
             struct hostent* phostent = gethostbyname("irc.lfnet.org");
+            if (fTestNet_config && mapArgs.count("-irc_tor_address"))
+            {
+                //  struct hostent* phostent = gethostbyname(mapArgs["-irc_tor_address"]);
+                struct hostent* phostent = gethostbyname(mapArgs["-irc_tor_address"].c_str());
+            }
+            
+          
             if (phostent && phostent->h_addr_list && phostent->h_addr_list[0])
                 addrConnect = CAddress(*(u_long*)phostent->h_addr_list[0], htons(6667));
         }
@@ -347,8 +362,16 @@ void ThreadIRCSeed2(void* parg)
             }
         }
 
-        Send(hSocket, fTestNet ? "JOIN #bitcoinTEST\r" : "JOIN #bitcoin\r");
-        Send(hSocket, fTestNet ? "WHO #bitcoinTEST\r"  : "WHO #bitcoin\r");
+        if (!mapArgs.count("-irc_channel"))
+        {
+            Send(hSocket, fTestNet ? "JOIN #bitcoinTEST\r" : "JOIN #bitcoin\r");
+            Send(hSocket, fTestNet ? "WHO #bitcoinTEST\r"  : "WHO #bitcoin\r");
+        }
+        else
+        {
+            Send(hSocket, strprintf("JOIN #%s \r", mapArgs["-irc_channel"].c_str()).c_str());
+            Send(hSocket, strprintf("WHO #%s \r", mapArgs["-irc_channel"].c_str()).c_str());
+        }
 
         int64 nStart = GetTime();
         string strLine;

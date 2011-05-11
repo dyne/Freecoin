@@ -147,6 +147,7 @@ extern bool fServer;
 extern bool fCommandLine;
 extern string strMiscWarning;
 extern bool fTestNet;
+extern bool fTestNet_config;
 extern bool fNoListen;
 extern bool fLogTimestamps;
 
