@@ -18,7 +18,8 @@ cd src/
 make -f makefile.unix            # Bitcoin with wxWidgets GUI
   or
 make -f makefile.unix bitcoind   # Headless bitcoin
-
+  or 
+make -f makefile.unix USE_UPNP= bitcoind   #to compile without no UPnP support and needed extra libs 
 
 Dependencies
 ------------
