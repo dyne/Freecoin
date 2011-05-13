@@ -893,7 +893,7 @@ void ThreadMapPort2(void* parg)
     printf("ThreadMapPort started\n");
 
     char port[6];
-    sprintf(port, "%d", ntohs(GetDefaultPort()));
+    sprintf(port, "%d", ntohs(GetListenPort()));
 
     const char * rootdescurl = 0;
     const char * multicastif = 0;
@@ -966,8 +966,27 @@ void MapPort(bool fMapPort)
 
 
 
-
-
+//unsigned short nListenPort = 0;
+ 
+void SetListenPort(unsigned short port) // port in host byte order
+{
+    printf("nListenPort = %u \n",nListenPort);
+    if (nListenPort != 0)
+        throw(runtime_error("Error, must call SetListenPort exactly once."));
+    nListenPort = htons(port);
+    addrLocalHost.port = nListenPort;
+}
+ 
+unsigned short GetListenPort() // returns port in network byte order
+{
+    if (nListenPort == 0)
+    {
+        //printf("nListenPort set to Default \n");
+        nListenPort = GetDefaultPort();
+    }
+    //printf("GetListenPort now returns %u \n",nListenPort);
+    return nListenPort;
+}
 
 
 
@@ -1002,6 +1021,7 @@ void DNSAddressSeed()
 
     printf("%d addresses found from DNS seeds\n", found);
 }
+
 
 
 
@@ -1210,8 +1230,17 @@ void ThreadOpenConnections2(void* parg)
 
                 // Randomize the order in a deterministic way, putting the standard port first
                 int64 nRandomizer = (uint64)(nStart * 4951 + addr.nLastTry * 9567851 + addr.ip * 7789) % (2 * 60 * 60);
-                if (addr.port != GetListenPort())
+                               
+
+                if (addr.port != GetListenPort() && GetBoolArg("-standard_ports_only"))
+                {
+                    continue;
+                }
+                else
+                {
+                 if (addr.port != GetListenPort())
                     nRandomizer += 2 * 60 * 60;
+                }
 
                 // Last seen  Base retry frequency
                 //   <1 hour   10 min
@@ -1358,25 +1387,7 @@ void ThreadMessageHandler2(void* parg)
     }
 }
 
-
-//unsigned short nListenPort = 0;
- 
-void SetListenPort(unsigned short port) // port in host byte order
-{
-    printf("nListenPort = %u \n",nListenPort);
-    if (nListenPort != 0)
-        throw(runtime_error("Error, must call SetListenPort exactly once."));
-    nListenPort = htons(port);
-    addrLocalHost.port = nListenPort;
-}
- 
-unsigned short GetListenPort() // returns port in network byte order
-{
-    if (nListenPort == 0)
-        nListenPort = GetDefaultPort();
-    //printf("GetListenPort now returns %d \n",nListenPort);
-    return nListenPort;
-}
+// void SetListnPort( was  here now moved up ^^
 
 
 bool BindListenPort(string& strError)

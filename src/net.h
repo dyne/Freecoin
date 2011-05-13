@@ -21,7 +21,8 @@ enum
 };
 
 
-
+void SetListenPort(unsigned short nPort);
+unsigned short GetListenPort();
 
 bool ConnectSocket(const CAddress& addrConnect, SOCKET& hSocketRet);
 bool GetMyExternalIP(unsigned int& ipRet);
@@ -37,8 +38,7 @@ bool BindListenPort(string& strError=REF(string()));
 void StartNode(void* parg);
 bool StopNode();
 
-void SetListenPort(unsigned short nPort);
-unsigned short GetListenPort();
+
 
 
 

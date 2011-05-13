@@ -10,6 +10,9 @@ testnet=1
 # listen port can now be set to other than 18333 for testnet on proto nets 
 port=38333
 
+#only connect to standard ports assigned at port config or as assigned by testnet or mainnet defaults 
+standard_ports_only=1
+
 paytxfee=.01
 
 # for the values bellow testnet_config line to be used testnet_config=1 must be set
