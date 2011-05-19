@@ -1,0 +1,57 @@
+new procedure to create new genesisblock using sacarlson git build 1daeff803d9b52723c886e5d64b3e9352787580e or later
+
+1. get epoc time in unix with date +%s
+2. use this number to edit block_nTime= value in bitcoin.config file see sample bitcoin.config in git
+3. find a headline article in the news or paper to create a new string value to put in pszTimestamp in bitcoin.config example
+pszTimestamp="The Times 04/Apr/2011 Tornadoes and vicious winds left 17 people dead across four states"
+4. set values of testnet_config=1, gennewblock=1,testnet=1, printtoconsole=1  in bitcoin.config 
+5. start bitcoind -noirc -testnet -datadir=/home/youruser/.bitcoin/proto
+   this will take some time maybe 1 hour or so for it to find a block, when it does find one you will see some data
+   with an error at the end.
+6. with the data seen at this point example:
+sacarlson@FreeNet:~/bitcoin/bitcoin$ ./bitcoind -testnet -noirc -datadir=/home/sacarlson/.bitcoin/test2 
+Bitcoin version 0.3.21 beta
+Default data directory /home/sacarlson/.bitcoin
+Bound to port 18333
+Loading addresses...
+dbenv.open strLogDir=/home/sacarlson/.bitcoin/test2/testnet/database strErrorFile=/home/sacarlson/.bitcoin/test2/testnet/db.log
+Loaded 0 addresses
+ addresses                35ms
+Loading block index...
+testnet mode active 
+hashGenesisBlock custom configured by -genesisblock in bitcoin.conf 
+hashGenesisBlock is now 000000017135cc76e65e8f292020ab2fc92e969e65c145ecf6e8510e5d7a31f5
+creating new genesis block I hope 
+ pszTimestamp = "21/Apr/11 New York Times, Apple faced questions on Wednesday about the security of its iPhone and iPad after a report that the devices regularly record their locations in a hidden file." 
+block.nTime custom configured by -block_nTime in bitcoin.conf 
+block.nNonce custom configured by -block_nNonce in bitcoin.conf 
+block.nTime = 1303365581 
+block.nBits = 487063544 
+block.nNonce = 0 
+block.nTime = 1303365581 
+block.nNonce = 939865470 
+block.GetHash = 00000001fdafdb922ba14a11f79ec31809342e267e6d00a38465318a949c030a
+hashGenesisBlock = 000000017135cc76e65e8f292020ab2fc92e969e65c145ecf6e8510e5d7a31f5
+block.hashMerkleRoot = 5ebf81ebbeaa59b51095640215c0726bac51d262b3b51ef38c0587b85a64e6b8
+bitcoind: main.cpp:2108: bool LoadBlockIndex(bool): Assertion `block.hashMerkleRoot == uint256(mapArgs["-block_hashMerkleRoot"].c_str())' failed.
+Aborted
+
+with the info above we would edit the values in bitcoin.config file with: 
+
+  block_hashMerkleRoot=0x5ebf81ebbeaa59b51095640215c0726bac51d262b3b51ef38c0587b85a64e6b8
+  genesisblock=0x00000001fdafdb922ba14a11f79ec31809342e267e6d00a38465318a949c030a
+  block_nTime=1303365581
+  block_nNonce=939865470
+
+
+7. now delete the testnet dir you plan to use for your new proto bitcoin and start bitcoind -noirc -testnet again
+   it should start to run normaly and when exit you should now have a walet file with your new proto coin genessis block
+   be sure to set gennewblock=0 or comment out before you continue at this point
+   in fact at this point you might want to start using a different -datadir also create your -datadir and copy your
+   config file into it then run bitcoind -noirc -testnet -datadir=/home/youruser/.bitcoin/proto
+
+8. you can now start to mine you new coin with the command bitcoind -noirc -testnet -gen -datadir=/home/youruser/.bitcoin/proto but to do this you will also 
+   need to have another system listening on your new coins network, make sure the port listen of each match
+   you should make the other system setup with the same bitcoin.config file with the same git build as the minner.
+   make sure at start of the other system that the /home/youruser/.bitcoin/testnet  is deleted before start.
+   optionaly you should change the -datadir= in your client so you don't damage other coins in your dir.

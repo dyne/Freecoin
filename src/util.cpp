@@ -19,6 +19,7 @@ bool fServer = false;
 bool fCommandLine = false;
 string strMiscWarning;
 bool fTestNet = false;
+bool fTestNet_config = false;
 bool fNoListen = false;
 bool fLogTimestamps = false;
 

@@ -1,0 +1,81 @@
+# this is the weeds config with a total present block value of 10,000,000 weed units with unchanging growth (never more than 10 mil) 
+# this is a test of a zero inflation growth monetary or trading system to posibly be used in equity or comodity trading systems.
+# this file will need to be renamed or called out in the command line to be used
+rpcpassword=yourpassword
+rpcuser=yourusername
+printtoconsole=1
+testnet=1
+#addnode=192.168.2.143
+#connect=192.168.2.158
+# listen port can now be set to other than 18333 for testnet on proto nets 
+port=38333
+
+#only connect to standard ports assigned at port config or as assigned by testnet or mainnet defaults 
+standard_ports_only=1
+
+paytxfee=.01
+
+# for the values bellow testnet_config line to be used testnet_config=1 must be set
+testnet_config=1
+
+#check_block is a block to verify the integrity up to this block number used with check_hash if not set it's not checked
+check_block=50
+
+#check_hash is the hash value of the check_block number used to verify integrity of block chain
+check_hash=0x00000000b1d0937a26fec5a735964674d3760641df217f54d5f9a8f1f25fd15e 
+
+#to enable scripts uncomment nonstandard here this overrides IsStandard() to return true
+#nonstandard=1
+
+# set MAX_MONEY that can be created by minners, limit seems to be no smaller than 50 no biger than 21mil?
+#max_money=1000
+
+#Subsidy value is what is paid when a new block is found default is 50 and pre inflation block rate if custom_inflation set
+Subsidy=1000000
+
+#custom inflation active setting to change inflation rate for smaller networks
+custom_inflation=1
+
+#inflation triger block setting is the triger that block numbers grater than this that will change minning value
+inflation_triger=10
+
+#post inflation block Subsidy value is the value given for minned blocks after crossing inflation_block
+post_Subsidy=0
+ 
+
+#my new Pbtc pszTimestamp for  as found on google seen on front page of New York Times paper
+pszTimestamp="York Times 26/Apr/11 The question is, what is the exchange of the future? said Richard Repetto, an analyst at Sandler O’Neill"
+
+#these values must be with value 0x to the front to make hex format
+#pbtc block.hashMerkleRoot value
+block_hashMerkleRoot=0x94258cb22695e570d735f3e6afc7c27bd36f5733226626cb0cdbd3dbcbae47a7
+
+#pbtc new genesisblock 
+genesisblock=0x00000002e364e2f348570fd99f66e557ceffe0047078cbe437abd775bf2ac677
+
+#Pbtc new block.ntime  time epoc use date +%s to get this number before you create a new chain
+block_nTime=1303793168
+
+#Pbtc new block.nNonce
+block_nNonce=662750529
+
+# IRC channel to use if you want something other than #bitcoin or #bitcoinTEST skip adding the # to the name
+irc_channel=weeds
+
+# IRC IP address must be in XXX.XXX.XXX.XXX:port format number this now set to card.freenode.net for #weeds for test
+#irc_ip=192.168.2.250:6667
+irc_ip=38.229.70.20:6667
+
+# IRC address used in Tor  can be a dns lookupable address pointing to your irc server
+# this seems to be the one that's being used not the above address
+#irc_tor_address=irc.surething.biz
+irc_tor_address=card.freenode.net
+
+#COINBASE_MATURITY defaults to 100 if changed here will credit minned coins in this number of new blocks 
+coinbase_maturity=2
+
+
+
+
+
+
