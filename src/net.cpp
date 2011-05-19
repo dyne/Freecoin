@@ -54,7 +54,10 @@ int fUseProxy = false;
 CAddress addrProxy("127.0.0.1",9050);
 
 
-
+unsigned short GetSendPort()
+{
+    return (unsigned short)(GetArg("-portsend", GetDefaultPort()));
+}
 
 unsigned short GetListenPort()
 {
