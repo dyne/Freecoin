@@ -7,8 +7,11 @@ printtoconsole=1
 testnet=1
 #addnode=192.168.2.143
 #connect=192.168.2.158
-# listen port can now be set to other than 18333 for testnet on proto nets 
+# listen port can now be set to other than 18333 for testnet or proto nets 
 port=38333
+
+# send port is the address port we will be sending to each node, the nodes must be listening on this port
+portsend=38333
 
 #only connect to standard ports assigned at port config or as assigned by testnet or mainnet defaults 
 standard_ports_only=1
