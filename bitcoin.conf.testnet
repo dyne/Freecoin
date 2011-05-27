@@ -1,0 +1,11 @@
+# This config will set your Freecoin client into testnet mode transacting with TNBTC or also know as fake money
+rpcpassword=yourpassword
+rpcuser=yourusername
+printtoconsole=1
+testnet=1
+
+
+
+
+
+

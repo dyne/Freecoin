@@ -1,0 +1,12 @@
+# this is an example freecoin config to set mode to the main bitcoin net mode or also called legacy bitcoin
+# your back to trasactions in real BTC with this config
+rpcpassword=yourpassword
+rpcuser=yourusername
+#printtoconsole=1
+
+
+
+
+
+
+

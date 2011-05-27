@@ -1,3 +1,6 @@
+# this is an example config for freecoin that you would edit and run to create a new block chain to create new currencies.
+# you will need to read the document create_new_genisis_block.txt for more details on the subject.
+# this file is also the only other document to see some of the added control values I added to Freecoin.
 rpcpassword=<password>
 rpcuser=<username>
 #paytxfee=.01
@@ -12,19 +15,19 @@ port=28333
 testnet_config=1
 
 #check_block is a block to verify the integrity up to this block number used with check_hash if not set it's not checked
-check_block=15
+#check_block=15
 
 #check_hash is the hash value of the check_block number used to verify integrity of block chain
-check_hash=0x0000000350d77f3989538ae423469c77263ab44b3cb3271c44e7af1f8cc2e7cd 
+#check_hash=0x0000000350d77f3989538ae423469c77263ab44b3cb3271c44e7af1f8cc2e7cd 
 
 
 #to enable scripts uncomment nonstandard=1 here this overrides IsStandard() to return true
-nonstandard=1
+#nonstandard=1
 
 # set MAX_MONEY block value that can be created by minners
 # be very carefull not to change this after you have created a new coin or you could loss all the coins you have
 # already minned in it.  be sure to backup you wallet.dat file to be safe.
-max_money=1000
+#max_money=1000
 
 #Subsidy value is what is paid when a new block is found when minning default is 50
 Subsidy=500
@@ -71,7 +74,7 @@ block_nNonce=0
 #coinbase_maturity=2
 
 #to loop to generate the first block in a new chain set this to 1 ( to create your first proto coin type)
-#gennewblock=1
+gennewblock=1
 
 
 
