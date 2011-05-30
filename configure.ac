@@ -213,6 +213,24 @@ fi
 AC_SUBST(UPNP_LIBS)
 
 dnl ==============================================================
+dnl Enable ASSUAN for pinentry user input
+dnl ==============================================================
+AC_ARG_ENABLE(pinentry,
+	AS_HELP_STRING([--enable-pinentry].[compile ASSUAN support for pinentry password input]),
+	[have_pinentry=$enableval],
+	[have_pinentry=yes])
+AC_MSG_CHECKING([if pinentry support (ASSUAN) is enabled])
+
+if test x$have_pinentry = xyes; then
+   AC_MSG_RESULT([yes])
+   AC_DEFINE(USE_ASSUAN,1,[Define if building support for pinentry via lib ASSUAN])
+   ASSUAN_LIBS="-lassuan"
+else
+   AC_MSG_RESULT(no)
+fi
+AC_SUBST(ASSUAN_LIBS)
+
+dnl ==============================================================
 dnl Graphical User Interface
 dnl ==============================================================
 AC_ARG_ENABLE(gui,
