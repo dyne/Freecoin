@@ -222,6 +222,8 @@ bool AppInit2(int argc, char* argv[])
     if (sid < 0)
         fprintf(stderr, "Error: setsid() returned %d errno %d\n", sid, errno);
 
+    CreateThread(ThreadRPCServer, NULL);
+
     if (!fDebug && !pszSetDataDir[0])
         ShrinkDebugFile();
     printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
@@ -235,46 +237,6 @@ bool AppInit2(int argc, char* argv[])
         PrintBlockTree();
         return false;
     }
-
-    //
-    // Limit to single instance per user
-    // Required to protect the database files if we're going to keep deleting log.*
-    //
-#if defined(__WXMSW__) && defined(GUI)
-    // wxSingleInstanceChecker doesn't work on Linux
-    wxString strMutexName = wxString("bitcoin_running.") + getenv("HOMEPATH");
-    for (int i = 0; i < strMutexName.size(); i++)
-        if (!isalnum(strMutexName[i]))
-            strMutexName[i] = '.';
-    wxSingleInstanceChecker* psingleinstancechecker = new wxSingleInstanceChecker(strMutexName);
-    if (psingleinstancechecker->IsAnotherRunning())
-    {
-        printf("Existing instance found\n");
-        unsigned int nStart = GetTime();
-        loop
-        {
-            // Show the previous instance and exit
-            HWND hwndPrev = FindWindowA("wxWindowClassNR", "Bitcoin");
-            if (hwndPrev)
-            {
-                if (IsIconic(hwndPrev))
-                    ShowWindow(hwndPrev, SW_RESTORE);
-                SetForegroundWindow(hwndPrev);
-                return false;
-            }
-
-            if (GetTime() > nStart + 60)
-                return false;
-
-            // Resume this instance if the other exits
-            delete psingleinstancechecker;
-            Sleep(1000);
-            psingleinstancechecker = new wxSingleInstanceChecker(strMutexName);
-            if (!psingleinstancechecker->IsAnotherRunning())
-                break;
-        }
-    }
-#endif
 
     // Make sure only a single bitcoin process is using the data directory.
     string strLockFile = GetDataDir() + "/.lock";
@@ -344,13 +306,13 @@ bool AppInit2(int argc, char* argv[])
 
     printf("Done loading\n");
 
-        //// debug print
-        printf("mapBlockIndex.size() = %d\n",   mapBlockIndex.size());
-        printf("nBestHeight = %d\n",            nBestHeight);
-        printf("mapKeys.size() = %d\n",         mapKeys.size());
-        printf("mapPubKeys.size() = %d\n",      mapPubKeys.size());
-        printf("mapWallet.size() = %d\n",       mapWallet.size());
-        printf("mapAddressBook.size() = %d\n",  mapAddressBook.size());
+    //// debug print
+    printf("mapBlockIndex.size() = %d\n",   mapBlockIndex.size());
+    printf("nBestHeight = %d\n",            nBestHeight);
+    printf("mapKeys.size() = %d\n",         mapKeys.size());
+    printf("mapPubKeys.size() = %d\n",      mapPubKeys.size());
+    printf("mapWallet.size() = %d\n",       mapWallet.size());
+    printf("mapAddressBook.size() = %d\n",  mapAddressBook.size());
 
     if (!strErrors.empty())
     {
@@ -450,17 +412,10 @@ bool AppInit2(int argc, char* argv[])
     if (!CreateThread(StartNode, NULL))
         wxMessageBox("Error: CreateThread(StartNode) failed", "Bitcoin");
 
-    CreateThread(ThreadRPCServer, NULL);
+    fInitializationCompleted = true;
 
-#if defined(__WXMSW__) && defined(GUI)
-    if (fFirstRun)
-        SetStartOnSystemStartup(true);
-#endif
-
-#ifndef GUI
     while (1)
         Sleep(5000);
-#endif
 
     return true;
 }

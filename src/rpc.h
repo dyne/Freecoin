@@ -4,3 +4,4 @@
 
 void ThreadRPCServer(void* parg);
 int CommandLineRPC(int argc, char *argv[]);
+extern bool fInitializationCompleted;

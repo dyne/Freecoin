@@ -31,6 +31,8 @@ void ThreadRPCServer2(void* parg);
 typedef Value(*rpcfn_type)(const Array& params, bool fHelp);
 extern map<string, rpcfn_type> mapCallTable;
 
+bool fInitializationCompleted = false;
+
 
 Object JSONRPCError(int code, const string& message)
 {
@@ -280,18 +282,22 @@ Value getinfo(const Array& params, bool fHelp)
 
     Object obj;
     obj.push_back(Pair("version",       (int)VERSION));
-    obj.push_back(Pair("balance",       ValueFromAmount(GetBalance())));
-    obj.push_back(Pair("blocks",        (int)nBestHeight));
-    obj.push_back(Pair("connections",   (int)vNodes.size()));
-    obj.push_back(Pair("proxy",         (fUseProxy ? addrProxy.ToStringIPPort() : string())));
-    obj.push_back(Pair("generate",      (bool)fGenerateBitcoins));
-    obj.push_back(Pair("genproclimit",  (int)(fLimitProcessors ? nLimitProcessors : -1)));
-    obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
-    obj.push_back(Pair("hashespersec",  gethashespersec(params, false)));
-    obj.push_back(Pair("testnet",       fTestNet));
-    obj.push_back(Pair("keypoololdest", (boost::int64_t)GetOldestKeyPoolTime()));
-    obj.push_back(Pair("paytxfee",      ValueFromAmount(nTransactionFee)));
-    obj.push_back(Pair("errors",        GetWarnings("statusbar")));
+    obj.push_back(Pair("isinitialized", (bool)fInitializationCompleted));
+    if (fInitializationCompleted)
+    {
+        obj.push_back(Pair("balance",       ValueFromAmount(GetBalance())));
+        obj.push_back(Pair("blocks",        (int)nBestHeight));
+        obj.push_back(Pair("connections",   (int)vNodes.size()));
+        obj.push_back(Pair("proxy",         (fUseProxy ? addrProxy.ToStringIPPort() : string())));
+        obj.push_back(Pair("generate",      (bool)fGenerateBitcoins));
+        obj.push_back(Pair("genproclimit",  (int)(fLimitProcessors ? nLimitProcessors : -1)));
+        obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
+        obj.push_back(Pair("hashespersec",  gethashespersec(params, false)));
+        obj.push_back(Pair("testnet",       fTestNet));
+        obj.push_back(Pair("keypoololdest", (boost::int64_t)GetOldestKeyPoolTime()));
+        obj.push_back(Pair("paytxfee",      ValueFromAmount(nTransactionFee)));
+        obj.push_back(Pair("errors",        GetWarnings("statusbar")));
+    }
     return obj;
 }
 
@@ -1917,6 +1923,8 @@ void ThreadRPCServer2(void* parg)
             if (valMethod.type() != str_type)
                 throw JSONRPCError(-32600, "Method must be a string");
             string strMethod = valMethod.get_str();
+            if (!fInitializationCompleted && strMethod != "help" && strMethod != "getinfo")
+                throw JSONRPCError(-42000, "Still initializing");
             if (strMethod != "getwork")
                 printf("ThreadRPCServer method=%s\n", strMethod.c_str());
 
