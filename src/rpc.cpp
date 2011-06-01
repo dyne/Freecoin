@@ -65,10 +65,7 @@ void PrintConsole(const char* format, ...)
 
 int64 AmountFromValue(const Value& value)
 {
-    double dAmount = value.get_real();
-    if (dAmount <= 0.0 || dAmount > 21000000.0)
-        throw JSONRPCError(-3, "Invalid amount");
-    int64 nAmount = roundint64(dAmount * COIN);
+    int64 nAmount = lexical_cast<int64>(value.get_str());
     if (!MoneyRange(nAmount))
         throw JSONRPCError(-3, "Invalid amount");
     return nAmount;
@@ -76,7 +73,7 @@ int64 AmountFromValue(const Value& value)
 
 Value ValueFromAmount(int64 amount)
 {
-    return (double)amount / (double)COIN;
+    return lexical_cast<string>(amount);
 }
 
 void WalletTxToJSON(const CWalletTx& wtx, Object& entry)
@@ -551,7 +548,7 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
         }
     }
 
-    return  ValueFromAmount(nAmount);
+    return ValueFromAmount(nAmount);
 }
 
 
@@ -610,7 +607,7 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
         }
     }
 
-    return (double)nAmount / (double)COIN;
+    return ValueFromAmount(nAmount);
 }
 
 
@@ -657,7 +654,7 @@ Value getbalance(const Array& params, bool fHelp)
             "If [account] is specified, returns the balance in the account.");
 
     if (params.size() == 0)
-        return  ValueFromAmount(GetBalance());
+        return ValueFromAmount(GetBalance());
 
     int nMinDepth = 1;
     if (params.size() > 1)
@@ -2111,8 +2108,6 @@ int CommandLineRPC(int argc, char *argv[])
         //
         if (strMethod == "setgenerate"            && n > 0) ConvertTo<bool>(params[0]);
         if (strMethod == "setgenerate"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
-        if (strMethod == "sendtoaddress"          && n > 1) ConvertTo<double>(params[1]);
-        if (strMethod == "settxfee"               && n > 0) ConvertTo<double>(params[0]);
         if (strMethod == "getamountreceived"      && n > 1) ConvertTo<boost::int64_t>(params[1]); // deprecated
         if (strMethod == "getreceivedbyaddress"   && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "getreceivedbyaccount"   && n > 1) ConvertTo<boost::int64_t>(params[1]);
@@ -2126,9 +2121,7 @@ int CommandLineRPC(int argc, char *argv[])
         if (strMethod == "listreceivedbylabel"    && n > 0) ConvertTo<boost::int64_t>(params[0]); // deprecated
         if (strMethod == "listreceivedbylabel"    && n > 1) ConvertTo<bool>(params[1]); // deprecated
         if (strMethod == "getbalance"             && n > 1) ConvertTo<boost::int64_t>(params[1]);
-        if (strMethod == "move"                   && n > 2) ConvertTo<double>(params[2]);
         if (strMethod == "move"                   && n > 3) ConvertTo<boost::int64_t>(params[3]);
-        if (strMethod == "sendfrom"               && n > 2) ConvertTo<double>(params[2]);
         if (strMethod == "sendfrom"               && n > 3) ConvertTo<boost::int64_t>(params[3]);
         if (strMethod == "listtransactions"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
         if (strMethod == "listtransactions"       && n > 2) ConvertTo<boost::int64_t>(params[2]);
