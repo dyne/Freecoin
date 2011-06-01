@@ -14,8 +14,6 @@ bool fPrintToDebugger = false;
 char pszSetDataDir[MAX_PATH] = "";
 bool fRequestShutdown = false;
 bool fShutdown = false;
-bool fDaemon = false;
-bool fServer = false;
 bool fCommandLine = false;
 string strMiscWarning;
 bool fTestNet = false;
@@ -573,10 +571,6 @@ void PrintException(std::exception* pex, const char* pszThread)
     printf("\n\n************************\n%s\n", pszMessage);
     fprintf(stderr, "\n\n************************\n%s\n", pszMessage);
     strMiscWarning = pszMessage;
-#ifdef GUI
-    if (wxTheApp && !fDaemon)
-        MyMessageBox(pszMessage, "Bitcoin", wxOK | wxICON_ERROR);
-#endif
     throw;
 }
 
@@ -598,10 +592,6 @@ void PrintExceptionContinue(std::exception* pex, const char* pszThread)
     printf("\n\n************************\n%s\n", pszMessage);
     fprintf(stderr, "\n\n************************\n%s\n", pszMessage);
     strMiscWarning = pszMessage;
-#ifdef GUI
-    if (wxTheApp && !fDaemon)
-        boost::thread(boost::bind(ThreadOneMessageBox, string(pszMessage)));
-#endif
 }
 
 

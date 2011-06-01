@@ -13,10 +13,6 @@ using namespace boost;
 
 void ExitTimeout(void* parg)
 {
-#ifdef __WXMSW__
-    Sleep(5000);
-    ExitProcess(0);
-#endif
 }
 
 void Shutdown(void* parg)
@@ -73,10 +69,7 @@ int main(int argc, char* argv[])
     bool fRet = false;
     fRet = AppInit(argc, argv);
 
-    if (fRet && fDaemon)
-        return 0;
-
-    return 1;
+    return 0;
 }
 #endif
 
@@ -108,10 +101,9 @@ bool AppInit2(int argc, char* argv[])
     // Disable confusing "helpful" text message on abort, ctrl-c
     _set_abort_behavior(0, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
 #endif
-#ifndef __WXMSW__
+
     umask(077);
-#endif
-#ifndef __WXMSW__
+
     // Clean shutdown on SIGTERM
     struct sigaction sa;
     sa.sa_handler = HandleSIGTERM;
@@ -120,7 +112,6 @@ bool AppInit2(int argc, char* argv[])
     sigaction(SIGTERM, &sa, NULL);
     sigaction(SIGINT, &sa, NULL);
     sigaction(SIGHUP, &sa, NULL);
-#endif
 
     //
     // Parameters
@@ -165,12 +156,7 @@ bool AppInit2(int argc, char* argv[])
 #endif
 #endif
             "  -paytxfee=<amt>  \t  "   + _("Fee per KB to add to transactions you send\n") +
-#ifdef GUI
-            "  -server          \t\t  " + _("Accept command line and JSON-RPC commands\n") +
-#endif
-#ifndef __WXMSW__
-            "  -daemon          \t\t  " + _("Run in the background as a daemon and accept commands\n") +
-#endif
+            "  -nodaemon          \t\t  " + _("Do not run in the background as a daemon and accept commands\n") +
             "  -testnet         \t\t  " + _("Use the test network\n") +
             "  -rpcuser=<user>  \t  "   + _("Username for JSON-RPC connections\n") +
             "  -rpcpassword=<pw>\t  "   + _("Password for JSON-RPC connections\n") +
@@ -192,35 +178,15 @@ bool AppInit2(int argc, char* argv[])
         strUsage += string() +
             "  -?               \t\t  " + _("This help message\n");
 
-#if defined(__WXMSW__) && defined(GUI)
-        // Tabs make the columns line up in the message box
-        wxMessageBox(strUsage, "Bitcoin", wxOK);
-#else
         // Remove tabs
         strUsage.erase(std::remove(strUsage.begin(), strUsage.end(), '\t'), strUsage.end());
         fprintf(stderr, "%s", strUsage.c_str());
-#endif
+
         return false;
     }
 
     fDebug = GetBoolArg("-debug");
     fAllowDNS = GetBoolArg("-dns");
-
-#ifndef __WXMSW__
-    fDaemon = GetBoolArg("-daemon");
-#else
-    fDaemon = false;
-#endif
-
-    if (fDaemon)
-        fServer = true;
-    else
-        fServer = GetBoolArg("-server");
-
-    /* force fServer when running without GUI */
-#ifndef GUI
-    fServer = true;
-#endif
 
     fPrintToConsole = GetBoolArg("-printtoconsole");
     fPrintToDebugger = GetBoolArg("-printtodebugger");
@@ -239,37 +205,27 @@ bool AppInit2(int argc, char* argv[])
         exit(ret);
     }
 
-#ifndef __WXMSW__
-    if (fDaemon)
+    // Daemonize
+    pid_t pid = fork();
+    if (pid < 0)
     {
-        // Daemonize
-        pid_t pid = fork();
-        if (pid < 0)
-        {
-            fprintf(stderr, "Error: fork() returned %d errno %d\n", pid, errno);
-            return false;
-        }
-        if (pid > 0)
-        {
-            CreatePidFile(GetPidFile(), pid);
-            return true;
-        }
-
-        pid_t sid = setsid();
-        if (sid < 0)
-            fprintf(stderr, "Error: setsid() returned %d errno %d\n", sid, errno);
+        fprintf(stderr, "Error: fork() returned %d errno %d\n", pid, errno);
+        return false;
     }
-#endif
+    if (pid > 0)
+    {
+        CreatePidFile(GetPidFile(), pid);
+        return true;
+    }
+
+    pid_t sid = setsid();
+    if (sid < 0)
+        fprintf(stderr, "Error: setsid() returned %d errno %d\n", sid, errno);
 
     if (!fDebug && !pszSetDataDir[0])
         ShrinkDebugFile();
     printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     printf("Bitcoin version %s\n", FormatFullVersion().c_str());
-#ifdef GUI
-    printf("OS version %s\n", ((string)wxGetOsDescription()).c_str());
-    printf("System default language is %d %s\n", g_locale.GetSystemLanguage(), ((string)g_locale.GetSysName()).c_str());
-    printf("Language file %s (%s)\n", (string("locale/") + (string)g_locale.GetCanonicalName() + "/LC_MESSAGES/bitcoin.mo").c_str(), ((string)g_locale.GetLocale()).c_str());
-#endif
     printf("Default data directory %s\n", GetDefaultDataDir().c_str());
 
     if (GetBoolArg("-loadblockindextest"))
@@ -345,8 +301,7 @@ bool AppInit2(int argc, char* argv[])
     //
     // Load data files
     //
-    if (fDaemon)
-        fprintf(stdout, "bitcoin server starting\n");
+    fprintf(stdout, "bitcoin server starting\n");
     strErrors = "";
     int64 nStart;
 
@@ -487,14 +442,6 @@ bool AppInit2(int argc, char* argv[])
 #endif
     }
 
-    //
-    // Create the main window and start the node
-    //
-#ifdef GUI
-    if (!fDaemon)
-        CreateMainWindow();
-#endif
-
     if (!CheckDiskSpace())
         return false;
 
@@ -503,8 +450,7 @@ bool AppInit2(int argc, char* argv[])
     if (!CreateThread(StartNode, NULL))
         wxMessageBox("Error: CreateThread(StartNode) failed", "Bitcoin");
 
-    if (fServer)
-        CreateThread(ThreadRPCServer, NULL);
+    CreateThread(ThreadRPCServer, NULL);
 
 #if defined(__WXMSW__) && defined(GUI)
     if (fFirstRun)

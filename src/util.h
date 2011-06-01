@@ -163,8 +163,6 @@ extern bool fPrintToDebugger;
 extern char pszSetDataDir[MAX_PATH];
 extern bool fRequestShutdown;
 extern bool fShutdown;
-extern bool fDaemon;
-extern bool fServer;
 extern bool fCommandLine;
 extern std::string strMiscWarning;
 extern bool fTestNet;
