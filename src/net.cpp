@@ -1083,7 +1083,6 @@ void DNSAddressSeed()
 }
 
 
-
 unsigned int pnSeed[] =
 {
     0x1ddb1032, 0x6242ce40, 0x52d6a445, 0x2dd7a445, 0x8a53cd47, 0x73263750, 0xda23c257, 0xecd4ed57,
@@ -1127,7 +1126,6 @@ unsigned int pnSeed[] =
     0x0f097059, 0x69ac957c, 0x366d8453, 0xb1ba2844, 0x8857f081, 0x70b5be63, 0xc545454b, 0xaf36ded1,
     0xb5a4b052, 0x21f062d1, 0x72ab89b2, 0x74a45318, 0x8312e6bc, 0xb916965f, 0x8aa7c858, 0xfe7effad,
 };
-
 
 
 void ThreadOpenConnections(void* parg)
@@ -1288,9 +1286,17 @@ void ThreadOpenConnections2(void* parg)
                 int64 nSinceLastTry = GetAdjustedTime() - addr.nLastTry;
 
                 // Randomize the order in a deterministic way, putting the standard port first
-                int64 nRandomizer = (uint64)(nStart * 4951 + addr.nLastTry * 9567851 + addr.ip * 7789) % (2 * 60 * 60);
-                if (addr.port != htons(GetSendPort()))
+                int64 nRandomizer = (uint64)(nStart * 4951 + addr.nLastTry * 9567851 + addr.ip * 7789) % (2 * 60 * 60);                
+
+                if (addr.port != GetSendPort() && GetBoolArg("-standard_ports_only"))
+                {
+                    continue;
+                }
+                else
+                {
+                 if (addr.port != GetSendPort())
                     nRandomizer += 2 * 60 * 60;
+                }
 
                 // Last seen  Base retry frequency
                 //   <1 hour   10 min
