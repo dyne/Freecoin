@@ -1289,7 +1289,7 @@ void ThreadOpenConnections2(void* parg)
 
                 // Randomize the order in a deterministic way, putting the standard port first
                 int64 nRandomizer = (uint64)(nStart * 4951 + addr.nLastTry * 9567851 + addr.ip * 7789) % (2 * 60 * 60);
-                if (addr.port != htons(GetDefaultPort()))
+                if (addr.port != htons(GetSendPort()))
                     nRandomizer += 2 * 60 * 60;
 
                 // Last seen  Base retry frequency
