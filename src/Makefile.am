@@ -1,4 +1,4 @@
-SUBDIRS = cryptopp wx xpm json
+SUBDIRS = cryptopp upnp wx xpm json
 
 AM_CXXFLAGS = $(HOST_CXXFLAGS) $(DEBUG_CXXFLAGS)
 

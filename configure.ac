@@ -184,25 +184,23 @@ dnl ==============================================================
 dnl enable UPNP
 dnl ==============================================================
 AC_ARG_ENABLE(upnp,
-	AS_HELP_STRING([--enable-upnp],[compile with UPNP support (use on/off to set default behaviour)]),
+	AS_HELP_STRING([--enable-upnp],[default setting for UPNP firewall request (on/off)]),
 	[have_upnp=$enableval],
-	[have_upnp=omit])
-AC_MSG_CHECKING([if UPNP support (miniupnp) is enabled])
-UPNP_LIBS=""
+	[have_upnp=on])
+AC_MSG_CHECKING([if UPNP support (miniupnp) is enabled by default])
+UPNP_LIBS="upnp/libupnpc.a"
+AC_DEFINE(USE_UPNP,1,[Define if building support for UPNP functions via miniupnp])
 if test x$have_upnp = xyes; then
 # this is the default behaviour for --enable-upnp with no arguments
-   AC_MSG_RESULT([compiled - on by default])
-   AC_DEFINE(USE_UPNP,1,[Define if building support for UPNP functions via miniupnp])
+   AC_MSG_RESULT([on by default])
 elif test x$have_upnp = xon; then
-   AC_MSG_RESULT([compiled - on by default])
-   AC_DEFINE(USE_UPNP,1,[Define if building support for UPNP functions via miniupnp])
+   AC_MSG_RESULT([on by default])
 elif test x$have_upnp = xoff; then
-   AC_MSG_RESULT([compiled - off by default])
-   AC_DEFINE(USE_UPNP,0,[Define if building support for UPNP functions via miniupnp])
+   AC_MSG_RESULT([off by default])
 else
-   AC_MSG_RESULT(no)
+   AC_MSG_RESULT([on by default])
 fi
-if test x$have_upnp != xomit; then
+if test x$have_upnp != off; then
    if test x$have_linux = xyes; then
       UPNP_LIBS="-lminiupnpc"
    fi
@@ -351,6 +349,7 @@ src/Makefile
 src/xpm/Makefile
 src/json/Makefile
 src/cryptopp/Makefile
+src/upnp/Makefile
 src/wx/Makefile
 ])
 AC_OUTPUT
