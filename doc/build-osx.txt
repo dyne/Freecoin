@@ -1,4 +1,5 @@
 Copyright (c) 2010 Laszlo Hanyecz
+Copyright (c) 2011 Bitcoin Developers
 Distributed under the MIT/X11 software license, see the accompanying
 file license.txt or http://www.opensource.org/licenses/mit-license.php.
 This product includes software developed by the OpenSSL Project for use in
@@ -9,7 +10,7 @@ software written by Thomas Bernard.
 
 Mac OS X build instructions
 Laszlo Hanyecz (solar@heliacal.net)
-
+Updated for autotools and MacPorts by Denis Roio (jaromil@dyne.org)
 
 Tested on 10.5 and 10.6 intel.  PPC is not supported because it's big-endian.
 
@@ -20,6 +21,9 @@ You need to install XCode with all the options checked so that the compiler
 and everything is available in /usr not just /Developer
 I think it comes on the DVD but you can get the current version from
 http://developer.apple.com
+
+You can get most of the dependencies needed through MacPorts instead
+of having to build them all manually. See http://www.macports.org
 
 
 1.  Pick a directory to work inside.. something like ~/bitcoin works.  The
@@ -38,18 +42,21 @@ WARNING: do not use the ~ notation with the configure scripts.. use the full
 name of the directory, for example /Users/james/bitcoin/deps for a user named
 'james'.  In my examples I am using 'macosuser' so make sure you change that.
 
-2.  Check out the trunk version of the bitcoin code from subversion:
+2.  Check out the trunk version of the bitcoin code from github:
 
 cd ~/bitcoin
-svn checkout https://bitcoin.svn.sourceforge.net/svnroot/bitcoin/trunk
+git clone https://github.com/bitcoin/bitcoin.git trunk
 
-This will make ~/bitcoin/trunk for you with all the files from subversion. 
+This will make ~/bitcoin/trunk for you with all the files from github. 
 
 3.  Get and build the dependencies
 
 
 Boost
 -----
+
+Install the needed boost packages from MacPorts.
+If you wish to install them manually, follow the instructions below.
 
 Download from http://www.boost.org/users/download/
 I'm assuming it ended up in ~/Downloads..
@@ -79,6 +86,9 @@ This is what my output looked like at the end:
 
 OpenSSL
 -------
+
+Install the needed OpenSSL packages from MacPorts.
+If you wish to install them manually, follow the instructions below.
 
 Download from http://www.openssl.org/source/
 
@@ -120,7 +130,7 @@ lib/libcrypto.a (for architecture x86_64):	current ar archive random library
 miniupnpc
 ---------
 
-The process for miniupnpc (optional) is similar to that of OpenSSL.
+Miniupnpc (optional) has to be installed manually.
 
 Download from http://miniupnp.tuxfamily.org/files/.
 
@@ -160,6 +170,9 @@ lib/libminiupnpc.a (for architecture x86_64):	current ar archive random library
 Berkeley DB
 -----------
 
+Install the needed BDB packages from MacPorts.
+If you wish to install them manually, follow the instructions below.
+
 Download from http://freshmeat.net/projects/berkeleydb/
 
 cd ~/bitcoin/deps
@@ -196,8 +209,6 @@ sed 's/if wxUSE_STL/if 0 \&\& wxUSE_STL/g' < include/wx/hashmap.h.orig > include
 [ -f include/wx/hashset.h.orig ] || cp include/wx/hashset.h include/wx/hashset.h.orig &&
 sed 's/if wxUSE_STL/if 0 \&\& wxUSE_STL/g' < include/wx/hashset.h.orig > include/wx/hashset.h &&
 
-
-
 rm -vrf "$BUILDDIR" &&
 mkdir "$BUILDDIR" &&
 cd "$BUILDDIR" &&
@@ -218,7 +229,6 @@ cd "$BUILDDIR" &&
 --with-expat=builtin \
 --with-macosx-sdk=/Developer/SDKs/MacOSX10.5.sdk &&
 
-
 find . -name Makefile | 
 while read i; do 
   echo $i; 
@@ -227,17 +237,34 @@ while read i; do
   mv "$i".new "$i"; 
 done
 
-
-
 make && 
 make install
 
 
 
+Bitcoin
+-------
+
 Now you should be able to build bitcoin
+To build using the new autotools system:
 
 cd ~/bitcoin/trunk
-make -f makefile.osx bitcoin
+./configure
+
+add relevant flags:
+	  --enable-gui=wx # Bitcoin with wxWidgets GUI
+	  --enable-upnp=on # use off to compile it in, but default off 
+see more options with ./configure --help including debug and profile
+
+then type
+make
+
+
+To build using the classic makefile.osx:
+
+cd ~/bitcoin/trunk/src
+make -f makefile.osx
+
 
 Before you can run it, you need to create an application bundle for Mac OS.
 Create the directories in terminal using mkdir and copy the files into place.

@@ -1,0 +1,34 @@
+Copyright (c) 2011 Bitcoin Developers
+Distributed under the MIT/X11 software license, see the accompanying
+file license.txt or http://www.opensource.org/licenses/mit-license.php.
+
+MinGW32 cross-compilation instructions
+
+written by Denis Roio <jaromil@dyne.org>
+testing contributed by Matt Corallo <matt@bluematt.me>
+
+
+Install mingw32 (on Debian and Ubuntu, may have a different name on
+other distros)
+
+The following will cross compile on Ubuntu.  Other distros will need
+more testing, but this should be a good example.  On Fedora,
+the relevant mingw configure scripts might help.
+
+./configure --host=i586-mingw32msvc \
+	    --with-wx-prefix=/usr/i586-mingw32msvc/ \
+	    --with-boost=/usr/i586-mingw32msvc \
+	    --with-boost-thread=boost_thread_win32-mt-s \
+	    --with-boost-program-options=boost_program_options-mt-s \
+	    --with-boost-filesystem=boost_filesystem-mt-s \
+	    --with-boost-system=boost_system-mt-s
+
+Where one should substitute '/usr/i586-mingw32msvc' with the path to
+the libraries and include directories of mingw.
+
+If all goes well with the configure detection then you can run
+
+make
+
+which should produce bitcoin (if WX GUI was selected) 
+and bitcoind (background daemon)
